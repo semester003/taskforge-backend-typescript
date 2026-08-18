@@ -1,7 +1,7 @@
-import cors = require("cors");
-import express = require("express");
-import errorHandler = require("./middleware/error.middleware");
-import routes = require("./routes");
+import cors from "cors";
+import express from "express";
+import errorHandler from "./middleware/error.middleware.js";
+import routes from "./routes/index.js";
 
 const app = express();
 
@@ -12,4 +12,4 @@ app.use("/api/v1", routes);
 
 app.use(errorHandler);
 
-export = app;
+export default app;

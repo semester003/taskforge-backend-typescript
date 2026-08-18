@@ -1,4 +1,4 @@
-import express = require("express");
+import { Router } from "express";
 import {
   acceptInvitation,
   createInvitation,
@@ -13,10 +13,10 @@ import {
   removeMember,
   updateMemberRole,
   updateWorkspace,
-} from "../controllers/workspace.controller";
-import authenticate = require("../middleware/auth.middleware");
+} from "../controllers/workspace.controller.js";
+import authenticate from "../middleware/auth.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/", authenticate, createWorkspace);
 router.get("/", authenticate, getMyWorkspaces);
@@ -32,4 +32,4 @@ router.patch("/:id/members/:userId", authenticate, updateMemberRole);
 router.get("/:id", authenticate, getWorkspaceById);
 router.delete("/:id/leave", authenticate, leaveWorkspace);
 
-export = router;
+export default router;

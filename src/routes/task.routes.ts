@@ -1,4 +1,4 @@
-import express = require("express");
+import { Router } from "express";
 import {
   assignTask,
   createTask,
@@ -7,10 +7,10 @@ import {
   getTasks,
   unassignTask,
   updateTask,
-} from "../controllers/task.controller";
-import authenticate = require("../middleware/auth.middleware");
+} from "../controllers/task.controller.js";
+import authenticate from "../middleware/auth.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/projects/:projectId/tasks", authenticate, createTask);
 router.get("/projects/:projectId/tasks", authenticate, getTasks);
@@ -20,4 +20,4 @@ router.delete("/tasks/:taskId", authenticate, deleteTask);
 router.patch("/tasks/:taskId/assign", authenticate, assignTask);
 router.patch("/tasks/:taskId/unassign", authenticate, unassignTask);
 
-export = router;
+export default router;

@@ -1,12 +1,17 @@
-import type { NextFunction, Request, Response } from "express";
-import jwt = require("jsonwebtoken");
-import type { AuthenticatedRequest, AuthenticatedUser } from "../types/http";
+import jwt, { type JwtPayload } from "jsonwebtoken";
+import type { RequestHandler } from "express";
+import { env } from "../config/env.js";
+import type { AuthenticatedUser } from "../types/domain.js";
 
-const authenticate = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Response | void => {
+const isAuthenticatedUser = (payload: string | JwtPayload): payload is AuthenticatedUser => {
+  return (
+    typeof payload !== "string" &&
+    typeof payload.userId === "number" &&
+    typeof payload.email === "string"
+  );
+};
+
+const authenticate: RequestHandler = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -16,12 +21,16 @@ const authenticate = (
     });
   }
 
-  const token = authHeader.split(" ")[1] as string;
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as jwt.Secret);
-    const authenticatedRequest = req as AuthenticatedRequest;
-    authenticatedRequest.user = decoded as AuthenticatedUser;
+    const payload = jwt.verify(token ?? "", env.jwtSecret);
+
+    if (!isAuthenticatedUser(payload)) {
+      throw new Error("Invalid token payload");
+    }
+
+    req.user = payload;
     next();
   } catch (_error: unknown) {
     return res.status(401).json({
@@ -31,4 +40,4 @@ const authenticate = (
   }
 };
 
-export = authenticate;
+export default authenticate;

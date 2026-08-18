@@ -1,21 +1,16 @@
 import type { RequestHandler } from "express";
-import type { ParamsDictionary } from "express-serve-static-core";
-import prisma = require("../config/prisma");
+import prisma from "../config/prisma.js";
+import type { RouteParams } from "../types/domain.js";
 
-interface WorkspaceIdParams extends ParamsDictionary {
-  workspaceId: string;
-}
-
-interface ProjectIdParams extends ParamsDictionary {
-  projectId: string;
-}
+type WorkspaceParams = RouteParams<"workspaceId">;
+type ProjectParams = RouteParams<"projectId">;
 
 interface ProjectRequestBody {
   name: string;
   description?: string | null;
 }
 
-const createProject: RequestHandler<WorkspaceIdParams, unknown, ProjectRequestBody> = async (
+const createProject: RequestHandler<WorkspaceParams, unknown, ProjectRequestBody> = async (
   req,
   res,
 ) => {
@@ -51,7 +46,7 @@ const createProject: RequestHandler<WorkspaceIdParams, unknown, ProjectRequestBo
   });
 };
 
-const getProjects: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const getProjects: RequestHandler<WorkspaceParams> = async (req, res) => {
   const workspaceId = Number(req.params.workspaceId);
 
   const membership = await prisma.workspaceMember.findFirst({
@@ -83,10 +78,7 @@ const getProjects: RequestHandler<WorkspaceIdParams> = async (req, res) => {
   });
 };
 
-const updateProject: RequestHandler<ProjectIdParams, unknown, ProjectRequestBody> = async (
-  req,
-  res,
-) => {
+const updateProject: RequestHandler<ProjectParams, unknown, ProjectRequestBody> = async (req, res) => {
   const projectId = Number(req.params.projectId);
   const { name, description } = req.body;
 
@@ -127,7 +119,7 @@ const updateProject: RequestHandler<ProjectIdParams, unknown, ProjectRequestBody
   });
 };
 
-const deleteProject: RequestHandler<ProjectIdParams> = async (req, res) => {
+const deleteProject: RequestHandler<ProjectParams> = async (req, res) => {
   const projectId = Number(req.params.projectId);
 
   const project = await prisma.project.findFirst({

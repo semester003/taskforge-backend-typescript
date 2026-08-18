@@ -1,14 +1,13 @@
 import type { RequestHandler } from "express";
-import type { ParamsDictionary } from "express-serve-static-core";
-import prisma = require("../config/prisma");
+import prisma from "../config/prisma.js";
+import {
+  isEditableWorkspaceRole,
+  type RouteParams,
+  type WorkspaceRole,
+} from "../types/domain.js";
 
-interface WorkspaceIdParams extends ParamsDictionary {
-  id: string;
-}
-
-interface WorkspaceMemberParams extends WorkspaceIdParams {
-  userId: string;
-}
+type WorkspaceParams = RouteParams<"id">;
+type WorkspaceMemberParams = WorkspaceParams & RouteParams<"userId">;
 
 interface WorkspaceRequestBody {
   name: string;
@@ -19,10 +18,10 @@ interface InvitationRequestBody {
 }
 
 interface UpdateMemberRoleRequestBody {
-  role?: string;
+  role?: WorkspaceRole;
 }
 
-const createWorkspace: RequestHandler<ParamsDictionary, unknown, WorkspaceRequestBody> = async (
+const createWorkspace: RequestHandler<Record<string, never>, unknown, WorkspaceRequestBody> = async (
   req,
   res,
 ) => {
@@ -64,7 +63,7 @@ const getMyWorkspaces: RequestHandler = async (req, res) => {
   });
 };
 
-const updateWorkspace: RequestHandler<WorkspaceIdParams, unknown, WorkspaceRequestBody> = async (
+const updateWorkspace: RequestHandler<WorkspaceParams, unknown, WorkspaceRequestBody> = async (
   req,
   res,
 ) => {
@@ -94,7 +93,7 @@ const updateWorkspace: RequestHandler<WorkspaceIdParams, unknown, WorkspaceReque
   });
 };
 
-const deleteWorkspace: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const deleteWorkspace: RequestHandler<WorkspaceParams> = async (req, res) => {
   const workspaceId = Number(req.params.id);
 
   const workspace = await prisma.workspace.deleteMany({
@@ -117,7 +116,7 @@ const deleteWorkspace: RequestHandler<WorkspaceIdParams> = async (req, res) => {
   });
 };
 
-const createInvitation: RequestHandler<WorkspaceIdParams, unknown, InvitationRequestBody> = async (
+const createInvitation: RequestHandler<WorkspaceParams, unknown, InvitationRequestBody> = async (
   req,
   res,
 ) => {
@@ -129,7 +128,7 @@ const createInvitation: RequestHandler<WorkspaceIdParams, unknown, InvitationReq
       workspaceId,
       userId: req.user.userId,
       role: {
-        in: ["OWNER", "ADMIN"],
+        in: ["OWNER", "ADMIN"] satisfies WorkspaceRole[],
       },
     },
   });
@@ -193,7 +192,7 @@ const getMyInvitations: RequestHandler = async (req, res) => {
   });
 };
 
-const acceptInvitation: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const acceptInvitation: RequestHandler<WorkspaceParams> = async (req, res) => {
   const invitationId = Number(req.params.id);
 
   const invitation = await prisma.workspaceInvitation.findFirst({
@@ -235,7 +234,7 @@ const acceptInvitation: RequestHandler<WorkspaceIdParams> = async (req, res) => 
   });
 };
 
-const rejectInvitation: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const rejectInvitation: RequestHandler<WorkspaceParams> = async (req, res) => {
   const invitationId = Number(req.params.id);
 
   const invitation = await prisma.workspaceInvitation.findFirst({
@@ -268,7 +267,7 @@ const rejectInvitation: RequestHandler<WorkspaceIdParams> = async (req, res) => 
   });
 };
 
-const getWorkspaceMembers: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const getWorkspaceMembers: RequestHandler<WorkspaceParams> = async (req, res) => {
   const workspaceId = Number(req.params.id);
 
   const membership = await prisma.workspaceMember.findFirst({
@@ -366,7 +365,7 @@ const updateMemberRole: RequestHandler<
   const userId = Number(req.params.userId);
   const { role } = req.body;
 
-  if (role !== "ADMIN" && role !== "MEMBER") {
+  if (!isEditableWorkspaceRole(role)) {
     return res.status(400).json({
       success: false,
       message: "Invalid role",
@@ -424,7 +423,7 @@ const updateMemberRole: RequestHandler<
   });
 };
 
-const getWorkspaceById: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const getWorkspaceById: RequestHandler<WorkspaceParams> = async (req, res) => {
   const workspaceId = Number(req.params.id);
 
   const workspace = await prisma.workspace.findFirst({
@@ -451,7 +450,7 @@ const getWorkspaceById: RequestHandler<WorkspaceIdParams> = async (req, res) => 
   });
 };
 
-const leaveWorkspace: RequestHandler<WorkspaceIdParams> = async (req, res) => {
+const leaveWorkspace: RequestHandler<WorkspaceParams> = async (req, res) => {
   const workspaceId = Number(req.params.id);
 
   const membership = await prisma.workspaceMember.findFirst({

@@ -1,14 +1,10 @@
+import type { Prisma } from "@prisma/client";
 import type { RequestHandler } from "express";
-import type { ParamsDictionary } from "express-serve-static-core";
-import prisma = require("../config/prisma");
+import prisma from "../config/prisma.js";
+import type { RouteParams } from "../types/domain.js";
 
-interface ProjectIdParams extends ParamsDictionary {
-  projectId: string;
-}
-
-interface TaskIdParams extends ParamsDictionary {
-  taskId: string;
-}
+type ProjectParams = RouteParams<"projectId">;
+type TaskParams = RouteParams<"taskId">;
 
 interface CreateTaskRequestBody {
   title: string;
@@ -23,7 +19,13 @@ interface AssignTaskRequestBody {
   userId: number;
 }
 
-const createTask: RequestHandler<ProjectIdParams, unknown, CreateTaskRequestBody> = async (
+const assigneeSelect = {
+  id: true,
+  name: true,
+  email: true,
+} satisfies Prisma.UserSelect;
+
+const createTask: RequestHandler<ProjectParams, unknown, CreateTaskRequestBody> = async (
   req,
   res,
 ) => {
@@ -57,11 +59,7 @@ const createTask: RequestHandler<ProjectIdParams, unknown, CreateTaskRequestBody
     },
     include: {
       assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        select: assigneeSelect,
       },
     },
   });
@@ -73,7 +71,7 @@ const createTask: RequestHandler<ProjectIdParams, unknown, CreateTaskRequestBody
   });
 };
 
-const getTasks: RequestHandler<ProjectIdParams> = async (req, res) => {
+const getTasks: RequestHandler<ProjectParams> = async (req, res) => {
   const projectId = Number(req.params.projectId);
 
   const project = await prisma.project.findFirst({
@@ -105,11 +103,7 @@ const getTasks: RequestHandler<ProjectIdParams> = async (req, res) => {
     },
     include: {
       assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        select: assigneeSelect,
       },
     },
   });
@@ -120,7 +114,7 @@ const getTasks: RequestHandler<ProjectIdParams> = async (req, res) => {
   });
 };
 
-const getTaskById: RequestHandler<TaskIdParams> = async (req, res) => {
+const getTaskById: RequestHandler<TaskParams> = async (req, res) => {
   const taskId = Number(req.params.taskId);
 
   const task = await prisma.task.findFirst({
@@ -138,11 +132,7 @@ const getTaskById: RequestHandler<TaskIdParams> = async (req, res) => {
     },
     include: {
       assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        select: assigneeSelect,
       },
     },
   });
@@ -160,10 +150,7 @@ const getTaskById: RequestHandler<TaskIdParams> = async (req, res) => {
   });
 };
 
-const updateTask: RequestHandler<TaskIdParams, unknown, UpdateTaskRequestBody> = async (
-  req,
-  res,
-) => {
+const updateTask: RequestHandler<TaskParams, unknown, UpdateTaskRequestBody> = async (req, res) => {
   const taskId = Number(req.params.taskId);
   const { title, completed } = req.body;
 
@@ -199,11 +186,7 @@ const updateTask: RequestHandler<TaskIdParams, unknown, UpdateTaskRequestBody> =
     },
     include: {
       assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        select: assigneeSelect,
       },
     },
   });
@@ -215,7 +198,7 @@ const updateTask: RequestHandler<TaskIdParams, unknown, UpdateTaskRequestBody> =
   });
 };
 
-const deleteTask: RequestHandler<TaskIdParams> = async (req, res) => {
+const deleteTask: RequestHandler<TaskParams> = async (req, res) => {
   const taskId = Number(req.params.taskId);
 
   const task = await prisma.task.findFirst({
@@ -252,10 +235,7 @@ const deleteTask: RequestHandler<TaskIdParams> = async (req, res) => {
   });
 };
 
-const assignTask: RequestHandler<TaskIdParams, unknown, AssignTaskRequestBody> = async (
-  req,
-  res,
-) => {
+const assignTask: RequestHandler<TaskParams, unknown, AssignTaskRequestBody> = async (req, res) => {
   const taskId = Number(req.params.taskId);
   const { userId } = req.body;
 
@@ -311,11 +291,7 @@ const assignTask: RequestHandler<TaskIdParams, unknown, AssignTaskRequestBody> =
     },
     include: {
       assignee: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        select: assigneeSelect,
       },
     },
   });
@@ -327,7 +303,7 @@ const assignTask: RequestHandler<TaskIdParams, unknown, AssignTaskRequestBody> =
   });
 };
 
-const unassignTask: RequestHandler<TaskIdParams> = async (req, res) => {
+const unassignTask: RequestHandler<TaskParams> = async (req, res) => {
   const taskId = Number(req.params.taskId);
 
   const task = await prisma.task.findFirst({

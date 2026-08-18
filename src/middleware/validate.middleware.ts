@@ -1,13 +1,8 @@
-import type { NextFunction, Request, Response } from "express";
-import type { ParamsDictionary } from "express-serve-static-core";
+import type { RequestHandler } from "express";
 import type { z } from "zod";
 
-const validate = (schema: z.ZodType) => {
-  return (
-    req: Request<ParamsDictionary, unknown, unknown>,
-    res: Response,
-    next: NextFunction,
-  ): Response | void => {
+const validate = <Schema extends z.ZodType>(schema: Schema): RequestHandler => {
+  return (req, res, next) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
@@ -21,4 +16,4 @@ const validate = (schema: z.ZodType) => {
   };
 };
 
-export = validate;
+export default validate;

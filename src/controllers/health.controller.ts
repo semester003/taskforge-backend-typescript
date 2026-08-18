@@ -1,6 +1,6 @@
-import type { Request, Response } from "express";
+import type { RequestHandler } from "express";
 
-const healthCheck = (_req: Request, res: Response): Response => {
+const healthCheck: RequestHandler = (_req, res) => {
   return res.status(200).json({
     success: true,
     message: "TaskForge API is running",

@@ -1,15 +1,14 @@
-import bcrypt = require("bcrypt");
+import bcrypt from "bcrypt";
 import type { RequestHandler } from "express";
-import type { ParamsDictionary } from "express-serve-static-core";
-import jwt = require("jsonwebtoken");
-import prisma = require("../config/prisma");
-import { loginSchema, registerSchema } from "../validations/auth.validation";
-import type { z } from "zod";
+import jwt from "jsonwebtoken";
+import { env } from "../config/env.js";
+import prisma from "../config/prisma.js";
+import {
+  type LoginRequestBody,
+  type RegisterRequestBody,
+} from "../validations/auth.validation.js";
 
-type RegisterRequestBody = z.infer<typeof registerSchema>;
-type LoginRequestBody = z.infer<typeof loginSchema>;
-
-const register: RequestHandler<ParamsDictionary, unknown, RegisterRequestBody> = async (
+const register: RequestHandler<Record<string, never>, unknown, RegisterRequestBody> = async (
   req,
   res,
 ) => {
@@ -48,7 +47,7 @@ const register: RequestHandler<ParamsDictionary, unknown, RegisterRequestBody> =
   });
 };
 
-const login: RequestHandler<ParamsDictionary, unknown, LoginRequestBody> = async (req, res) => {
+const login: RequestHandler<Record<string, never>, unknown, LoginRequestBody> = async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({
     where: {
@@ -77,7 +76,7 @@ const login: RequestHandler<ParamsDictionary, unknown, LoginRequestBody> = async
       userId: user.id,
       email: user.email,
     },
-    process.env.JWT_SECRET as jwt.Secret,
+    env.jwtSecret,
     {
       expiresIn: "1h",
     },
